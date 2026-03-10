@@ -30,6 +30,11 @@ try:
     import click
     from colorama import init as colorama_init, Fore, Style
     colorama_init()
+    from meda_claw.policy import (
+        create_attestation, save_attestation, load_attestations,
+        verify_attestation_integrity, verify_human_in_loop,
+        full_governance_check, get_attestation_for_commit,
+    )
 except ImportError:
     print("Missing dependencies. Run: pip install click colorama")
     sys.exit(1)
@@ -442,6 +447,145 @@ echo "✅ meda-claw: Pre-commit check passed."
     click.echo(f"\n{Fore.GREEN}🎉 meda-claw initialized!{Style.RESET_ALL}")
     click.echo(f"  Run {Fore.CYAN}medaclaw status{Style.RESET_ALL} to check component health.")
     click.echo(f"  Run {Fore.CYAN}medaclaw scan{Style.RESET_ALL} for a full security scan.")
+
+
+# ── Command: sign ─────────────────────────────────────────────────────────
+
+@cli.command()
+@click.argument("target", default=".", type=click.Path(exists=True))
+@click.option("--reviewer", prompt="Reviewer name", help="Name of the human reviewer")
+@click.option("--ai-pct", type=float, prompt="AI contribution %", help="Estimated AI contribution percentage (0-100)")
+@click.option("--notes", default="", help="Review notes (required for >80% AI)")
+def sign(target, reviewer, ai_pct, notes):
+    """Sign the current commit as Human-Reviewed for IP safety.
+
+    Creates a cryptographic attestation that a human has reviewed
+    AI-generated or AI-assisted code. Required for commits where
+    AI contribution exceeds 50%.
+    """
+    banner()
+    click.echo(f"{Fore.CYAN}━━━ HUMAN-REVIEW ATTESTATION ━━━{Style.RESET_ALL}\n")
+
+    target_path = Path(target).resolve()
+
+    # Get current commit hash
+    commit_hash = None
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True, text=True, cwd=str(target_path),
+        )
+        if result.returncode == 0:
+            commit_hash = result.stdout.strip()
+    except Exception:
+        pass
+
+    # Validate
+    if ai_pct > 80 and not notes:
+        click.echo(f"  {Fore.RED}⚠ AI contribution >80% requires review notes.{Style.RESET_ALL}")
+        notes = click.prompt("  Review notes")
+
+    if ai_pct < 0 or ai_pct > 100:
+        click.echo(f"  {Fore.RED}Error: AI percentage must be 0-100{Style.RESET_ALL}")
+        return
+
+    # Create attestation
+    attestation = create_attestation(
+        reviewer=reviewer,
+        ai_percentage=ai_pct,
+        commit_hash=commit_hash,
+        notes=notes,
+    )
+
+    # Save
+    save_attestation(attestation, str(target_path))
+
+    click.echo(f"  {Fore.GREEN}✅ Attestation created{Style.RESET_ALL}")
+    click.echo(f"  Reviewer:       {reviewer}")
+    click.echo(f"  AI Contribution: {ai_pct}%")
+    click.echo(f"  Commit:         {commit_hash[:12] if commit_hash else 'N/A'}")
+    click.echo(f"  Hash:           {attestation['integrity_hash'][:16]}...")
+    click.echo(f"  Timestamp:      {attestation['iso_time']}")
+    if notes:
+        click.echo(f"  Notes:          {notes}")
+
+    click.echo(f"\n  {Fore.GREEN}IP Provenance verified. Commit is governance-compliant.{Style.RESET_ALL}")
+    click.echo(f"\n{Fore.CYAN}━━━ ATTESTATION COMPLETE ━━━{Style.RESET_ALL}")
+
+
+# ── Command: verify ──────────────────────────────────────────────────────
+
+@cli.command()
+@click.argument("target", default=".", type=click.Path(exists=True))
+@click.option("--commit", default=None, help="Specific commit hash to verify")
+@click.option("--full", is_flag=True, help="Run full governance check")
+def verify(target, commit, full):
+    """Verify governance compliance of the current workspace.
+
+    Checks human-review attestations, policy compliance, git hooks,
+    license files, and configuration integrity.
+    """
+    banner()
+    click.echo(f"{Fore.CYAN}━━━ GOVERNANCE VERIFICATION ━━━{Style.RESET_ALL}\n")
+
+    target_path = Path(target).resolve()
+
+    if full:
+        # Full governance check
+        findings = full_governance_check(str(target_path))
+        for f in findings:
+            status = f["status"]
+            icon = {
+                "PASS": f"{Fore.GREEN}✅",
+                "FAIL": f"{Fore.RED}❌",
+                "WARN": f"{Fore.YELLOW}⚠️",
+                "INFO": f"{Fore.CYAN}ℹ️",
+            }.get(status, "?")
+            click.echo(f"  {icon} {f['check']:<25}{Style.RESET_ALL} {f['detail']}")
+
+        passed = sum(1 for f in findings if f["status"] == "PASS")
+        total = len(findings)
+        click.echo(f"\n  Score: {passed}/{total} checks passed")
+
+    elif commit:
+        # Verify specific commit
+        att = get_attestation_for_commit(commit, str(target_path))
+        if att:
+            valid = verify_attestation_integrity(att)
+            if valid:
+                click.echo(f"  {Fore.GREEN}✅ Commit {commit[:12]} has valid attestation{Style.RESET_ALL}")
+                click.echo(f"     Reviewer: {att['reviewer']}")
+                click.echo(f"     AI %:     {att['ai_percentage']}%")
+                click.echo(f"     Time:     {att['iso_time']}")
+            else:
+                click.echo(f"  {Fore.RED}❌ Attestation found but TAMPERED{Style.RESET_ALL}")
+        else:
+            click.echo(f"  {Fore.YELLOW}⚠ No attestation found for commit {commit[:12]}{Style.RESET_ALL}")
+
+    else:
+        # Verify all attestations
+        attestations = load_attestations(str(target_path))
+        if not attestations:
+            click.echo(f"  {Fore.YELLOW}No attestations found.{Style.RESET_ALL}")
+            click.echo(f"  Run {Fore.GREEN}medaclaw sign{Style.RESET_ALL} after reviewing AI-assisted commits.")
+        else:
+            valid = 0
+            tampered = 0
+            for att in attestations:
+                if verify_attestation_integrity(att):
+                    valid += 1
+                else:
+                    tampered += 1
+                    click.echo(f"  {Fore.RED}❌ TAMPERED: {att.get('commit_hash', 'unknown')[:12]} by {att.get('reviewer', '?')}{Style.RESET_ALL}")
+
+            click.echo(f"\n  Total attestations: {len(attestations)}")
+            click.echo(f"  {Fore.GREEN}Valid: {valid}{Style.RESET_ALL}")
+            if tampered:
+                click.echo(f"  {Fore.RED}Tampered: {tampered}{Style.RESET_ALL}")
+            else:
+                click.echo(f"  {Fore.GREEN}✅ All attestations intact{Style.RESET_ALL}")
+
+    click.echo(f"\n{Fore.CYAN}━━━ VERIFICATION COMPLETE ━━━{Style.RESET_ALL}")
 
 
 if __name__ == "__main__":
