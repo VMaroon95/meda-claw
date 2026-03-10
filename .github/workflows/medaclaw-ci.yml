@@ -1,0 +1,40 @@
+name: MedaClaw Governance Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  governance-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install meda-claw
+        run: pip install meda-claw
+
+      - name: Run Governance Audit
+        run: medaclaw report --json > audit_report.json
+
+      - name: Display Score
+        run: |
+          SCORE=$(python3 -c "import json; print(json.load(open('audit_report.json'))['governance_score'])")
+          echo "🦞 Governance Score: $SCORE/100"
+          if [ "$SCORE" -lt 50 ]; then
+            echo "❌ Score below 50 — governance check FAILED"
+            exit 1
+          fi
+
+      - name: Upload Audit Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: governance-report
+          path: audit_report.json

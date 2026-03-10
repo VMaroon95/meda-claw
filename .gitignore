@@ -4,3 +4,11 @@ __pycache__/
 .DS_Store
 dist/
 build/
+.env
+*.pem
+*.key
+credentials
+audit_logs/
+audit_reports/
+.meda-claw-scan.json
+.medaclaw-attestations.jsonl

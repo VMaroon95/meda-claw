@@ -449,6 +449,103 @@ echo "✅ meda-claw: Pre-commit check passed."
     click.echo(f"  Run {Fore.CYAN}medaclaw scan{Style.RESET_ALL} for a full security scan.")
 
 
+# ── Command: report ───────────────────────────────────────────────────────
+
+@cli.command()
+@click.argument("target", default=".", type=click.Path(exists=True))
+@click.option("--json-output", "--json", "json_out", is_flag=True, help="Output as JSON")
+@click.option("--save", default=None, help="Save report to file")
+@click.option("--badge", is_flag=True, help="Print badge URL for README")
+def report(target, json_out, save, badge):
+    """Generate a full Governance Report with AI Governance Score (0-100).
+
+    Runs all scanners (secrets, attribution, behavior), aggregates findings,
+    and calculates a weighted Governance Score.
+    """
+    from meda_claw.core.engine import GovernanceEngine
+    from meda_claw.core.scoring import GovernanceScorer
+
+    engine = GovernanceEngine(target)
+    audit_report = engine.run()
+    scorer = GovernanceScorer()
+    grade = scorer.grade(audit_report.score)
+    rating = scorer.rating(audit_report.score)
+
+    if json_out:
+        click.echo(audit_report.to_json())
+        return
+
+    if badge:
+        score = audit_report.score
+        color = "brightgreen" if score >= 90 else "green" if score >= 80 else "yellow" if score >= 70 else "orange" if score >= 50 else "red"
+        click.echo(f"![Governance Score](https://img.shields.io/badge/governance_score-{score}%2F100-{color}?style=flat-square&logo=data:image/svg+xml;base64,)")
+        return
+
+    banner()
+    click.echo(f"{Fore.CYAN}━━━ GOVERNANCE REPORT ━━━{Style.RESET_ALL}\n")
+    click.echo(f"  Target: {audit_report.target}")
+    click.echo(f"  Time:   {audit_report.duration_ms:.0f}ms\n")
+
+    # Score display
+    score = audit_report.score
+    if score >= 90:
+        score_color = Fore.GREEN
+    elif score >= 70:
+        score_color = Fore.YELLOW
+    elif score >= 50:
+        score_color = Fore.YELLOW
+    else:
+        score_color = Fore.RED
+
+    click.echo(f"  {score_color}╔══════════════════════════════════════╗")
+    click.echo(f"  ║                                      ║")
+    click.echo(f"  ║   AI GOVERNANCE SCORE:  {score:>3} / 100    ║")
+    click.echo(f"  ║   Grade: {grade}  —  {rating[:24]:<24} ║")
+    click.echo(f"  ║                                      ║")
+    click.echo(f"  ╚══════════════════════════════════════╝{Style.RESET_ALL}\n")
+
+    # Breakdown
+    if audit_report.score_breakdown:
+        click.echo(f"  {Fore.WHITE}Score Breakdown:{Style.RESET_ALL}")
+        for cat, data in audit_report.score_breakdown.items():
+            bar_filled = int((data['score'] / data['max']) * 20) if data['max'] > 0 else 0
+            bar_empty = 20 - bar_filled
+            bar_color = Fore.GREEN if data['score'] >= data['max'] * 0.8 else Fore.YELLOW if data['score'] >= data['max'] * 0.5 else Fore.RED
+            click.echo(
+                f"    {cat:<14} {bar_color}{'█' * bar_filled}{'░' * bar_empty}{Style.RESET_ALL} "
+                f"{data['score']:>2}/{data['max']} ({data['findings']} findings)"
+            )
+        click.echo()
+
+    # Findings
+    summary = audit_report.summary()
+    if summary["total_findings"] > 0:
+        click.echo(f"  {Fore.WHITE}Findings ({summary['total_findings']}):{Style.RESET_ALL}")
+        for f in audit_report.findings:
+            sev_icon = {
+                "critical": f"{Fore.RED}🔴",
+                "high": f"{Fore.RED}🟠",
+                "medium": f"{Fore.YELLOW}🟡",
+                "low": f"{Fore.CYAN}🔵",
+                "info": f"{Fore.WHITE}⚪",
+            }.get(f.severity.value, "?")
+
+            loc = f"  {f.file}:{f.line}" if f.file and f.line else f"  {f.file}" if f.file else ""
+            click.echo(f"    {sev_icon} [{f.severity.value:>8}]{Style.RESET_ALL} {f.message}")
+            if f.remediation:
+                click.echo(f"               {Fore.WHITE}→ {f.remediation}{Style.RESET_ALL}")
+    else:
+        click.echo(f"  {Fore.GREEN}✅ No findings — governance posture is clean.{Style.RESET_ALL}")
+
+    click.echo(f"\n{Fore.CYAN}━━━ REPORT COMPLETE ━━━{Style.RESET_ALL}")
+
+    # Save if requested
+    if save:
+        with open(save, "w") as f_out:
+            f_out.write(audit_report.to_json())
+        click.echo(f"\n  Report saved to: {save}")
+
+
 # ── Command: benchmark ────────────────────────────────────────────────────
 
 @cli.command()
