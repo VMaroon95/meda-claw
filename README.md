@@ -5,7 +5,9 @@
 In an era of centralized AI platforms, `meda-claw` is the open-source standard for AI security, IP provenance, and financial auditing. One CLI to govern them all.
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
+
+> 📜 Read the [Manifesto](MANIFESTO.md) — why independent AI governance matters.
 
 ---
 
@@ -161,6 +163,31 @@ Exploring how a composable, open-source governance stack can replace fragmented 
 - **Privacy-first** — All processing is local. Zero telemetry. Zero cloud dependencies.
 - **Composable** — Use one tool or all seven. They're better together but fine alone.
 
+## Proof of Audit
+
+Don't trust — verify. Run the benchmark to see meda-claw catch real threats:
+
+```bash
+medaclaw benchmark
+```
+
+Three scenarios, three catches, zero false negatives:
+
+1. **Secret Exfiltration** — Plants dummy AWS/GitHub/OpenAI keys → scanner catches all 3
+2. **Unsigned AI Commit** — 85% AI code without attestation → policy engine blocks it
+3. **Attestation Tampering** — Modifies a signed attestation → integrity check detects it
+
+```
+  🎯 PERFECT SCORE — All threats detected.
+     meda-claw governance stack is operational.
+```
+
+## Contributing
+
+We're seeking core contributors for the **Agent Behavior** and **Legal Signatures** modules.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for standards and process.
+
 ## Roadmap
 
 - [ ] PyPI package publication
@@ -173,7 +200,7 @@ Exploring how a composable, open-source governance stack can replace fragmented 
 
 ## License
 
-MIT — see [LICENSE](LICENSE)
+AGPL-3.0 — see [LICENSE](LICENSE). Commercial licensing available for enterprise/SaaS deployment (contact varunmeda95@gmail.com).
 
 ## Author
 

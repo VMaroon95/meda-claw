@@ -449,6 +449,17 @@ echo "✅ meda-claw: Pre-commit check passed."
     click.echo(f"  Run {Fore.CYAN}medaclaw scan{Style.RESET_ALL} for a full security scan.")
 
 
+# ── Command: benchmark ────────────────────────────────────────────────────
+
+@cli.command()
+def benchmark():
+    """Run the Proof-of-Audit benchmark — three scenarios, three catches."""
+    from meda_claw.benchmarks.proof_of_audit import run_all
+    success = run_all()
+    if not success:
+        sys.exit(1)
+
+
 # ── Command: sign ─────────────────────────────────────────────────────────
 
 @cli.command()
