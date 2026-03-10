@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "meda-claw"
+version = "1.0.0"
+description = "The Independent AI Governance & Security Stack"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [{name = "Varun Meda", email = "varunmeda95@gmail.com"}]
+dependencies = ["click>=8.0", "colorama>=0.4"]
+
+[project.scripts]
+medaclaw = "meda_claw.cli:cli"
+
+[project.urls]
+Homepage = "https://github.com/VMaroon95/meda-claw"
+Repository = "https://github.com/VMaroon95/meda-claw"
+Issues = "https://github.com/VMaroon95/meda-claw/issues"
