@@ -59,9 +59,10 @@ class AuditReport:
     score_breakdown: Optional[dict] = None
     duration_ms: float = 0
     scanner_versions: dict = field(default_factory=dict)
+    review: Optional[dict] = None
 
     def to_dict(self) -> dict:
-        return {
+        d = {
             "schema": "meda-claw/report/v1",
             "target": self.target,
             "timestamp": self.timestamp,
@@ -72,6 +73,14 @@ class AuditReport:
             "summary": self.summary(),
             "findings": [f.to_dict() for f in self.findings],
         }
+        if self.review:
+            d["semantic_review"] = {
+                "risk_escalations": self.review.get("risk_escalations", 0),
+                "critical_findings_count": len(self.review.get("critical_findings", [])),
+                "path_classifications": self.review.get("path_classifications", {}),
+                "reasoning_trace": self.review.get("reasoning_trace", ""),
+            }
+        return d
 
     def to_json(self, indent: int = 2) -> str:
         return json.dumps(self.to_dict(), indent=indent, default=str)

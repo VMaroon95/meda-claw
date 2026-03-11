@@ -539,11 +539,127 @@ def report(target, json_out, save, badge):
 
     click.echo(f"\n{Fore.CYAN}━━━ REPORT COMPLETE ━━━{Style.RESET_ALL}")
 
+    # Semantic Review
+    if audit_report.review:
+        review = audit_report.review
+        if review.get("risk_escalations", 0) > 0 or review.get("critical_findings"):
+            click.echo(f"\n  {Fore.WHITE}Semantic Review:{Style.RESET_ALL}")
+            if review.get("risk_escalations"):
+                click.echo(f"    {Fore.RED}⚡ {review['risk_escalations']} finding(s) escalated due to critical path{Style.RESET_ALL}")
+            if review.get("path_classifications"):
+                domains = set(review["path_classifications"].values())
+                click.echo(f"    Critical paths touched: {', '.join(domains)}")
+            for trace in review.get("finding_traces", [])[:5]:
+                for line in trace.split("\n"):
+                    click.echo(f"    {Fore.WHITE}{line}{Style.RESET_ALL}")
+                click.echo()
+
     # Save if requested
     if save:
         with open(save, "w") as f_out:
             f_out.write(audit_report.to_json())
         click.echo(f"\n  Report saved to: {save}")
+
+
+# ── Command: review ───────────────────────────────────────────────────────
+
+@cli.command()
+@click.argument("target", default=".", type=click.Path(exists=True))
+@click.option("--pr", is_flag=True, help="PR review mode (concise, CI-friendly)")
+@click.option("--json-output", "--json", "json_out", is_flag=True, help="JSON output")
+@click.option("--trace", is_flag=True, help="Show full reasoning trace")
+def review(target, pr, json_out, trace):
+    """Semantic review with critical path analysis and reasoning traces.
+
+    Analyzes findings against governance rules to determine business impact.
+    Classifies files by domain (auth, db, infra, financial) and escalates
+    severity when findings touch critical paths.
+    """
+    from meda_claw.core.engine import GovernanceEngine
+    from meda_claw.core.scoring import GovernanceScorer
+
+    engine = GovernanceEngine(target)
+    audit_report = engine.run(semantic_review=True)
+    scorer = GovernanceScorer()
+    grade = scorer.grade(audit_report.score)
+
+    if json_out:
+        click.echo(audit_report.to_json())
+        return
+
+    review_data = audit_report.review or {}
+
+    if pr:
+        # Concise PR comment format
+        score = audit_report.score
+        emoji = "✅" if score >= 80 else "⚠️" if score >= 50 else "❌"
+        click.echo(f"{emoji} **meda-claw Governance Score: {score}/100 (Grade {grade})**")
+        click.echo()
+
+        summary = audit_report.summary()
+        if summary["by_severity"]:
+            parts = []
+            for sev in ["critical", "high", "medium", "low"]:
+                count = summary["by_severity"].get(sev, 0)
+                if count:
+                    parts.append(f"{count} {sev}")
+            click.echo(f"Findings: {', '.join(parts)}")
+
+        if review_data.get("risk_escalations"):
+            click.echo(f"⚡ {review_data['risk_escalations']} escalation(s) — critical path affected")
+
+        if review_data.get("path_classifications"):
+            domains = set(review_data["path_classifications"].values())
+            click.echo(f"Critical paths: {', '.join(domains)}")
+
+        # Top 3 critical actions
+        critical = review_data.get("critical_findings", [])
+        if critical:
+            click.echo("\nPriority actions:")
+            for i, f in enumerate(critical[:3], 1):
+                click.echo(f"  {i}. {f.get('message', '')}")
+
+        return
+
+    # Full review output
+    banner()
+    click.echo(f"{Fore.CYAN}━━━ SEMANTIC REVIEW ━━━{Style.RESET_ALL}\n")
+    click.echo(f"  Target: {audit_report.target}")
+    click.echo(f"  Score:  {audit_report.score}/100 (Grade {grade})")
+    click.echo(f"  Time:   {audit_report.duration_ms:.0f}ms\n")
+
+    escalations = review_data.get("risk_escalations", 0)
+    critical = review_data.get("critical_findings", [])
+    classifications = review_data.get("path_classifications", {})
+
+    if escalations:
+        click.echo(f"  {Fore.RED}⚡ {escalations} finding(s) escalated to HIGH due to critical path location{Style.RESET_ALL}")
+
+    if classifications:
+        click.echo(f"\n  {Fore.WHITE}Critical Path Analysis:{Style.RESET_ALL}")
+        by_domain = {}
+        for file, domain in classifications.items():
+            by_domain.setdefault(domain, []).append(file)
+        for domain, files in by_domain.items():
+            icon = {"authentication": "🔐", "database": "🗄️", "infrastructure": "🏗️",
+                    "financial_gateways": "💳"}.get(domain, "📁")
+            click.echo(f"    {icon} {domain.upper()}")
+            for f in files[:5]:
+                click.echo(f"       → {f}")
+
+    if critical:
+        click.echo(f"\n  {Fore.WHITE}Critical Findings ({len(critical)}):{Style.RESET_ALL}")
+        for f in critical:
+            click.echo(f"    {Fore.RED}● {f.get('message', '')}{Style.RESET_ALL}")
+            if f.get("remediation"):
+                click.echo(f"      → {f['remediation']}")
+
+    if trace and review_data.get("reasoning_trace"):
+        click.echo(f"\n  {Fore.WHITE}Reasoning Trace:{Style.RESET_ALL}")
+        for line in review_data["reasoning_trace"].split("\n"):
+            click.echo(f"    {line}")
+
+    click.echo(f"\n{Fore.CYAN}━━━ REVIEW COMPLETE ━━━{Style.RESET_ALL}")
 
 
 # ── Command: benchmark ────────────────────────────────────────────────────
