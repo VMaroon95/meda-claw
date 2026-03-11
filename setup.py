@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="meda-claw",
-    version="1.0.0",
+    version="3.0.0",
     description="The Independent AI Governance & Security Stack",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
@@ -10,6 +10,8 @@ setup(
     author_email="varunmeda95@gmail.com",
     url="https://github.com/VMaroon95/meda-claw",
     packages=find_packages(),
+    package_data={"meda_claw": ["policy/*.json"]},
+    include_package_data=True,
     python_requires=">=3.10",
     install_requires=[
         "click>=8.0",

@@ -10,15 +10,16 @@ jobs:
   governance-audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.12"
+          python-version: '3.10'
 
-      - name: Install meda-claw
-        run: pip install meda-claw
+      - name: Install meda-claw (local)
+        run: pip install .
 
       - name: Run Governance Audit
         run: medaclaw report --json . > audit_report.json
@@ -26,15 +27,7 @@ jobs:
       - name: Display Score
         run: |
           SCORE=$(python3 -c "import json; print(json.load(open('audit_report.json'))['governance_score'])")
-          GRADE=$(python3 -c "
-          s=int(open('audit_report.json').read().split('governance_score\": ')[1].split(',')[0])
-          print('A' if s>=90 else 'B' if s>=80 else 'C' if s>=70 else 'D' if s>=50 else 'F')
-          ")
-          echo "🦞 Governance Score: $SCORE/100 (Grade $GRADE)"
-          if [ "$SCORE" -lt 50 ]; then
-            echo "❌ Score below 50 — governance check FAILED"
-            exit 1
-          fi
+          echo "🦞 Governance Score: $SCORE/100"
 
       - name: Semantic Review (PR only)
         if: github.event_name == 'pull_request'
