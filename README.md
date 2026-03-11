@@ -4,8 +4,10 @@
 
 Independent governance framework for autonomous AI systems — attribution tracking, secret detection, behavioral auditing, and policy enforcement. No vendor lock-in. No cloud dependencies. No telemetry.
 
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
+[![Governance Audit](https://github.com/VMaroon95/meda-claw/actions/workflows/medaclaw-ci.yml/badge.svg)](https://github.com/VMaroon95/meda-claw/actions/workflows/medaclaw-ci.yml)
+[![License](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
+[![Governance Score](https://img.shields.io/badge/AI%20Governance%20Score-26%2F100-red?style=flat-square)](demo/vulnerable_repo/)
 
 > 📜 Read the [Manifesto](MANIFESTO.md) · 🤝 [Contributing](CONTRIBUTING.md)
 
