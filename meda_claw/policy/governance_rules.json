@@ -1,8 +1,8 @@
 {
-  "version": "1.0.0",
+  "version": "2.0.0",
   "metadata": {
     "framework": "meda_claw",
-    "focus": "High-Impact Governance"
+    "focus": "Active AI Governance"
   },
   "critical_paths": {
     "authentication": [
@@ -10,7 +10,9 @@
       "**/middleware/**",
       "**/identity/**",
       "**/*login*",
-      "**/*session*"
+      "**/*session*",
+      "**/*oauth*",
+      "**/*jwt*"
     ],
     "database": [
       "**/migrations/**",
@@ -23,18 +25,24 @@
       "**/k8s/**",
       "**/.github/workflows/**",
       "**/Dockerfile",
-      "**/helm/**"
+      "**/helm/**",
+      "**/docker-compose*"
     ],
     "financial_gateways": [
       "**/payments/**",
       "**/stripe/**",
-      "**/billing/**"
+      "**/billing/**",
+      "**/*checkout*"
     ]
   },
   "high_risk_tokens": [
     "eval(",
+    "exec(",
     "os.system(",
     "subprocess.run(",
+    "subprocess.call(",
+    "pickle.loads(",
+    "__import__(",
     "chmod",
     "GRANT ALL",
     "DROP TABLE",
@@ -47,5 +55,12 @@
     "db_schema_change": 2.0,
     "infra_mutation": 3.0,
     "unreviewed_ai_logic": 1.5
+  },
+  "remediation_templates": {
+    "hardcoded_key": "Move to .env and use os.getenv(). Never commit secrets to source.",
+    "unsafe_eval": "Replace eval() with ast.literal_eval() or typed parsing.",
+    "shell_injection": "Use subprocess.run() with shell=False and explicit argument lists.",
+    "missing_gitignore": "Add .env, *.pem, *.key, credentials to .gitignore.",
+    "no_license": "Add a LICENSE file to clarify IP ownership."
   }
 }
