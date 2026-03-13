@@ -17,11 +17,14 @@ from ..core.findings import Finding, Severity, Category
 
 # Patterns indicating AI-generated code
 AI_MARKERS = [
-    re.compile(r"(?i)generated\s+by\s+(claude|gpt|copilot|codex|gemini|llama|mistral)", re.IGNORECASE),
+    re.compile(r"(?i)generated\s+by\s+(claude|gpt|copilot|codex|gemini|llama|mistral|ai[_\-\s]?agent)", re.IGNORECASE),
     re.compile(r"(?i)this\s+(?:code|file|function)\s+was\s+(?:generated|created|written)\s+(?:by|with|using)\s+(?:ai|claude|gpt|copilot|chatgpt)", re.IGNORECASE),
     re.compile(r"(?i)#\s*ai[_\-\s]?generated", re.IGNORECASE),
     re.compile(r"(?i)//\s*auto[_\-\s]?generated\s+by", re.IGNORECASE),
     re.compile(r"(?i)@generated\s+by", re.IGNORECASE),
+    re.compile(r"(?i)(?:refactored|rewritten|optimized|patched)\s+by\s+(?:ai|claude|gpt|copilot|agent)", re.IGNORECASE),
+    re.compile(r"(?i)AI[_\-\s]?Agent[_\-\s]?[A-Z0-9]", re.IGNORECASE),
+    re.compile(r"(?i)(?:forensic\s+metadata|purpose):\s*.*(?:ai|agent|generated|refactor)", re.IGNORECASE),
 ]
 
 # Source file extensions

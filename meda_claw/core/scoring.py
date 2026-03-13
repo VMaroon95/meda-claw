@@ -58,11 +58,20 @@ class GovernanceScorer:
         category_findings = {k: 0 for k in CATEGORY_WEIGHTS}
         category_deductions = {k: 0 for k in CATEGORY_WEIGHTS}
 
+        has_secret = False
+        has_injection = False
+
         for finding in findings:
             cat = CATEGORY_MAP.get(finding.category, "behavior")
             penalty = SEVERITY_PENALTY.get(finding.severity, 0)
             category_deductions[cat] += penalty
             category_findings[cat] += 1
+
+            # Track critical threat classes
+            if finding.category == Category.SECRET and finding.severity == Severity.CRITICAL:
+                has_secret = True
+            if finding.category == Category.BEHAVIOR and finding.severity == Severity.CRITICAL:
+                has_injection = True
 
         # Apply deductions (floor at 0 per category)
         for cat in category_scores:
@@ -71,6 +80,13 @@ class GovernanceScorer:
             category_scores[cat] = max_score - deduction
 
         total = sum(category_scores.values())
+
+        # Punitive overrides: critical secrets/injections tank the score
+        if has_secret:
+            total = max(total - 40, 0)
+        if has_injection:
+            total = max(total - 30, 0)
+
         total = max(0, min(100, total))
 
         breakdown = {}

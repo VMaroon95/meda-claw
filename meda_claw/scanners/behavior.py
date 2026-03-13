@@ -21,13 +21,18 @@ SUSPICIOUS_NPM = {
     "rc": "Compromised package",
 }
 
-# Dangerous Python imports
+# Dangerous Python patterns (regex, reason, severity)
 DANGEROUS_IMPORTS = {
-    r"pickle\.loads": "Deserialization can execute arbitrary code",
-    r"eval\(": "Arbitrary code execution risk",
-    r"exec\(": "Arbitrary code execution risk",
-    r"subprocess\.call\(.*shell\s*=\s*True": "Shell injection risk",
-    r"__import__\(": "Dynamic imports can be exploited",
+    r"pickle\.loads": ("Deserialization can execute arbitrary code", "CRITICAL"),
+    r"eval\(": ("Arbitrary code execution risk", "CRITICAL"),
+    r"exec\(": ("Arbitrary code execution risk", "CRITICAL"),
+    r"os\.system\(": ("OS command execution — shell injection risk", "CRITICAL"),
+    r"os\.popen\(": ("OS command execution — shell injection risk", "CRITICAL"),
+    r"subprocess\.call\(": ("Subprocess execution — review for shell injection", "HIGH"),
+    r"subprocess\.run\(": ("Subprocess execution — review for shell injection", "HIGH"),
+    r"subprocess\.Popen\(": ("Subprocess execution — review for shell injection", "HIGH"),
+    r"subprocess\.call\(.*shell\s*=\s*True": ("Shell injection risk — shell=True is dangerous", "CRITICAL"),
+    r"__import__\(": ("Dynamic imports can be exploited", "MEDIUM"),
 }
 
 
@@ -160,16 +165,22 @@ class BehaviorScanner:
                 except (OSError, PermissionError):
                     continue
 
-                for pattern_str, reason in DANGEROUS_IMPORTS.items():
-                    if re.search(pattern_str, content):
+                for pattern_str, (reason, sev_str) in DANGEROUS_IMPORTS.items():
+                    matches = list(re.finditer(pattern_str, content))
+                    if matches:
                         rel_path = str(fpath.relative_to(target_path))
-                        findings.append(Finding(
-                            category=Category.BEHAVIOR,
-                            severity=Severity.MEDIUM,
-                            rule=f"behavior/dangerous_pattern",
-                            message=f"Dangerous pattern '{pattern_str}' in {rel_path}: {reason}",
-                            file=rel_path,
-                            remediation=f"Review usage of {pattern_str}. Ensure it's necessary and input-validated.",
-                        ))
+                        severity = getattr(Severity, sev_str, Severity.MEDIUM)
+                        for m in matches:
+                            line_num = content[:m.start()].count("\n") + 1
+                            findings.append(Finding(
+                                category=Category.BEHAVIOR,
+                                severity=severity,
+                                rule=f"behavior/dangerous_pattern",
+                                message=f"Dangerous call '{m.group(0)}' in {rel_path}:{line_num} — {reason}",
+                                file=rel_path,
+                                line=line_num,
+                                evidence=m.group(0),
+                                remediation=f"Review usage of {pattern_str}. Ensure it's necessary and input-validated.",
+                            ))
 
         return findings

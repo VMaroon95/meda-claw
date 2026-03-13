@@ -48,13 +48,13 @@ SECRET_PATTERNS = [
     ),
     (
         "Stripe Secret Key",
-        re.compile(r"sk_live_[a-zA-Z0-9]{24,}"),
+        re.compile(r"sk_live_[a-zA-Z0-9\.]{5,}"),
         Severity.CRITICAL,
         "Rotate in Stripe Dashboard. Use restricted keys with minimal permissions.",
     ),
     (
         "Stripe Test Key",
-        re.compile(r"sk_test_[a-zA-Z0-9]{24,}"),
+        re.compile(r"sk_test_[a-zA-Z0-9\.]{5,}"),
         Severity.MEDIUM,
         "Test keys are lower risk but should not be in source code.",
     ),
@@ -93,6 +93,12 @@ SECRET_PATTERNS = [
         re.compile(r"""(?i)(?:api[_\-]?key|secret|token|password|credential|auth)\s*[=:]\s*['"]([a-zA-Z0-9/+=\-_]{16,})['"]"""),
         Severity.MEDIUM,
         "Review if this is a real credential. Use environment variables for secrets.",
+    ),
+    (
+        "Hardcoded Key Assignment",
+        re.compile(r"""(?i)(?:[A-Z_]*(?:KEY|SECRET|TOKEN|PASSWORD|CREDENTIAL|API_KEY))\s*=\s*['"]([a-zA-Z0-9/+=\-_.]{8,})['"]"""),
+        Severity.HIGH,
+        "Hardcoded credential assignment detected. Use environment variables or a secrets manager.",
     ),
 ]
 
