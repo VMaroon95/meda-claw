@@ -1,4 +1,4 @@
-# 🦞 meda-claw
+# 🦞 meda_claw
 
 **Independent AI Security & Governance for Codebases**
 
