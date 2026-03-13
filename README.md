@@ -1,6 +1,4 @@
-# 🦞 meda_claw
-
-**Independent AI Security & Governance for Codebases**
+# 🦞 meda-claw: Independent AI Security & Governance
 
 [![Governance Audit](https://github.com/VMaroon95/meda-claw/actions/workflows/medaclaw-ci.yml/badge.svg)](https://github.com/VMaroon95/meda-claw/actions/workflows/medaclaw-ci.yml)
 [![License](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
@@ -8,12 +6,20 @@
 [![AI Governance Score](https://img.shields.io/badge/AI%20Governance-A%20(94)-brightgreen?style=flat-square)](demo/vulnerable_repo/)
 
 > **"Who audits the AI that writes your code?"**
->
-> As AI agents (Claude, Cursor, Copilot) take over the keyboard, traditional security tools fail to track **intent**. `meda-claw` is a forensic-first security layer providing automated risk scoring, provenance tracking, and commit-blocking.
+
+In the Agentic Era, tools like Claude, Cursor, and Devin are generating code 100x faster than humans can review it. This "Velocity Gap" is where critical secrets leak, logic hallucinations hide, and security attribution disappears. Standard scanners look for bugs; **meda-claw** audits **intent**.
+
+`meda-claw` is a sovereign security framework that acts as a forensic layer between your AI agent and your production environment. By utilizing Claude's advanced reasoning and a punitive "Meda-Risk" scoring engine, it identifies not just what is wrong, but *why* it's a risk. Whether you are a solo developer using Cursor or an enterprise managing autonomous agents, `meda-claw` provides the active defense—blocking unsafe commits and enforcing governance before a single line of "hallucinated" code hits your repository.
 
 📜 [Manifesto](MANIFESTO.md) · 🤝 [Contributing](CONTRIBUTING.md)
 
 ---
+
+## 🛡️ Key Advantages
+
+- **Active Sovereignty:** Physically block unsafe commits with local Git hooks.
+- **Forensic Attribution:** Trace and verify AI-generated logic with AST analysis.
+- **Independent Trust:** A neutral auditor for the agentic age.
 
 ## The Sovereign Architecture
 
