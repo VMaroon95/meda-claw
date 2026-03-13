@@ -1,80 +1,31 @@
-# Contributing to meda-claw
+# 🦞 Contributing to medaclaw
 
-Thank you for your interest in contributing to meda-claw. This project maintains high standards for code quality, security, and academic rigor.
+First, thank you for being part of the mission to secure the Agentic Era. `medaclaw` is a sovereign framework, and we maintain high standards for the logic that enters our core engine.
 
-## Current Priorities
+## 🏛️ The Sovereign Rules of Contribution
 
-We are actively seeking core contributors for:
+To protect the integrity and vision of the project, all contributors must adhere to the following:
 
-- **Agent Behavior Module** — Expanding Agent-Audit with process-level monitoring (ptrace/DTrace), anomaly detection via behavioral baselines, and multi-agent session correlation.
-- **Legal Signatures Module** — Extending the Human-Review Attestation system with GPG signing, OIDC-based identity verification, and integration with enterprise SSO.
-- **SIEM Integration** — Splunk, Elastic, and Grafana connectors for enterprise deployment.
-- **Benchmarking** — Expanding the Proof-of-Audit benchmark suite with adversarial scenarios.
+### 1. Architectural Authority
+`medaclaw` is guided by a specific "Meda-Risk" philosophy. Before writing any major code:
+- **Open an Issue:** Discuss your proposed changes with the Lead Architect.
+- **Approval:** No architectural shifts will be merged without explicit sign-off from the project lead.
 
-## Standards
+### 2. Attribution & Credit
+Your hard work will be recognized, but the project identity remains unified:
+- **Contributors List:** Significant contributions will be added to a `CONTRIBUTORS.md` file.
+- **Copyright:** All contributions are made under the existing **AGPL-3.0 License**. By contributing, you agree that your code will be governed by this license to keep the project open and protected.
 
-### Code Quality
+### 3. Technical Standards (The "Hardened" Rule)
+We do not accept "guesswork" logic. Any new scanners or behavioral rules must:
+- Use **AST (Abstract Syntax Tree)** analysis where possible (refer to `behavior.py`).
+- Include a test case that proves detection of a specific "hallucinated" AI vulnerability.
+- Maintain the performance threshold (< 2s for standard repositories).
 
-- **Python 3.10+** with full type hints
-- **Zero external dependencies** for core modules (click and colorama are the only CLI deps)
-- **Pure stdlib** where possible — no heavy frameworks
-- All functions must include docstrings explaining purpose, parameters, and return values
-- Follow existing code patterns and naming conventions
+## 🛡️ How to Get Started
+1. Fork the repo (for your own development).
+2. Create a feature branch (`git checkout -b feature/hardened-logic`).
+3. Commit your changes.
+4. Open a Pull Request for review.
 
-### Security
-
-- No secrets, tokens, or credentials in code — ever
-- No telemetry, analytics, or network calls from core modules
-- All audit data must be tamper-evident (hash-chained)
-- External inputs must be validated and sanitized
-
-### Testing
-
-- Every new feature requires corresponding test coverage
-- Benchmark scenarios for security-critical features
-- Edge cases must be explicitly tested (empty inputs, malformed data, adversarial inputs)
-
-### Commits
-
-- Practice what we preach: use `medaclaw sign` on AI-assisted contributions
-- Clear, descriptive commit messages
-- One logical change per commit
-- Reference related issues where applicable
-
-## Process
-
-1. **Fork** the repository
-2. **Create a branch** from `main` (`feature/your-feature` or `fix/your-fix`)
-3. **Write code** following the standards above
-4. **Test** thoroughly — run `medaclaw benchmark` to verify nothing breaks
-5. **Sign** your work if AI-assisted: `medaclaw sign --reviewer "Your Name" --ai-pct <percentage>`
-6. **Submit a PR** with a clear description of what and why
-
-## What Makes a Good Contribution
-
-- Solves a real problem in AI governance or agent security
-- Maintains the independence principle (no vendor dependencies)
-- Includes documentation and examples
-- Is security-conscious by default
-- Could be cited in an academic paper
-
-## What We Won't Accept
-
-- Code that phones home or adds telemetry
-- Vendor-specific integrations that create lock-in
-- Breaking changes without migration paths
-- PRs without tests for security-critical code
-- AI-generated code without human review attestation
-
-## License
-
-By contributing, you agree that your contributions will be licensed under the AGPL-3.0 license. For questions about commercial licensing, contact varunmeda95@gmail.com.
-
-## Contact
-
-- **Maintainer:** Varun Meda — [GitHub](https://github.com/VMaroon95) · [LinkedIn](https://linkedin.com/in/varunmeda1)
-- **Issues:** [github.com/VMaroon95/meda-claw/issues](https://github.com/VMaroon95/meda-claw/issues)
-
----
-
-*We're building the governance standard for autonomous AI. If that matters to you, we want you here.*
+**Note:** The Lead Architect reserves the right to request changes or reject PRs that do not align with the security standards of the Project Sovereign vision.
