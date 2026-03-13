@@ -1107,5 +1107,163 @@ def verify(target, commit, full):
     click.echo(f"\n{Fore.CYAN}━━━ VERIFICATION COMPLETE ━━━{Style.RESET_ALL}")
 
 
+# ── Command: remote ────────────────────────────────────────────────────────
+
+@cli.command()
+@click.argument("url")
+@click.option("--json-output", "--json", "json_out", is_flag=True, help="Output as JSON")
+@click.option("--threshold", default=None, type=int, help="Fail if score below threshold")
+@click.option("--branch", default=None, help="Branch to scan (default: default branch)")
+@click.option("--keep", is_flag=True, help="Keep cloned repo after scan (default: auto-cleanup)")
+def remote(url, json_out, threshold, branch, keep):
+    """Scan a remote GitHub repository without manual cloning.
+
+    Accepts GitHub URLs in any format:
+      medaclaw remote https://github.com/user/repo
+      medaclaw remote user/repo
+      medaclaw remote github.com/user/repo
+
+    The repo is shallow-cloned to a temp directory, scanned, scored,
+    and cleaned up automatically.
+    """
+    import tempfile
+    import re as regex
+    from meda_claw.core.engine import GovernanceEngine
+    from meda_claw.core.scoring import GovernanceScorer
+
+    # Normalize URL
+    original_url = url
+    # Handle shorthand: user/repo
+    if regex.match(r'^[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$', url):
+        url = f"https://github.com/{url}.git"
+    # Handle github.com/user/repo (no protocol)
+    elif url.startswith("github.com/"):
+        url = f"https://{url}"
+    # Ensure .git suffix
+    if url.startswith("https://") and not url.endswith(".git"):
+        url = url.rstrip("/") + ".git"
+
+    # Extract repo name for display
+    repo_name = url.rstrip("/").rstrip(".git").split("/")[-2] + "/" + url.rstrip("/").rstrip(".git").split("/")[-1]
+
+    if not json_out:
+        banner()
+        click.echo(f"{Fore.CYAN}━━━ REMOTE SCAN ━━━{Style.RESET_ALL}\n")
+        click.echo(f"  Target: {Fore.WHITE}{repo_name}{Style.RESET_ALL}")
+        click.echo(f"  URL:    {url}")
+        click.echo(f"  Mode:   shallow clone → scan → {'keep' if keep else 'cleanup'}\n")
+        click.echo(f"  {Fore.YELLOW}⏳ Cloning...{Style.RESET_ALL}", nl=False)
+
+    # Clone to temp dir
+    tmp_dir = tempfile.mkdtemp(prefix="medaclaw_remote_")
+    clone_path = Path(tmp_dir) / "repo"
+
+    clone_cmd = ["git", "clone", "--depth", "1"]
+    if branch:
+        clone_cmd.extend(["--branch", branch])
+    clone_cmd.extend([url, str(clone_path)])
+
+    result = subprocess.run(clone_cmd, capture_output=True, text=True)
+
+    if result.returncode != 0:
+        if not json_out:
+            click.echo(f"\r  {Fore.RED}❌ Clone failed{Style.RESET_ALL}")
+            click.echo(f"     {result.stderr.strip()}")
+        else:
+            click.echo(json.dumps({"error": "clone_failed", "message": result.stderr.strip()}))
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+        raise SystemExit(1)
+
+    if not json_out:
+        click.echo(f"\r  {Fore.GREEN}✅ Cloned{Style.RESET_ALL}              ")
+        click.echo(f"  {Fore.YELLOW}⏳ Scanning...{Style.RESET_ALL}", nl=False)
+
+    # Run governance engine
+    try:
+        engine = GovernanceEngine(str(clone_path))
+        audit_report = engine.run()
+        scorer = GovernanceScorer()
+        grade = scorer.grade(audit_report.score)
+        rating = scorer.rating(audit_report.score)
+    except Exception as e:
+        if not json_out:
+            click.echo(f"\r  {Fore.RED}❌ Scan failed: {e}{Style.RESET_ALL}")
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+        raise SystemExit(1)
+
+    if not json_out:
+        click.echo(f"\r  {Fore.GREEN}✅ Scanned{Style.RESET_ALL}             \n")
+
+    # Output (reuse report formatting)
+    if json_out:
+        output = audit_report.to_dict()
+        output["remote"] = {"url": url, "repo": repo_name, "branch": branch}
+        click.echo(json.dumps(output, indent=2, default=str))
+    else:
+        score = audit_report.score
+        score_color = Fore.GREEN if score >= 90 else Fore.YELLOW if score >= 70 else Fore.RED
+
+        click.echo(f"  {score_color}╔══════════════════════════════════════╗")
+        click.echo(f"  ║                                      ║")
+        click.echo(f"  ║   AI GOVERNANCE SCORE:  {score:>3} / 100    ║")
+        click.echo(f"  ║   Grade: {grade}  —  {rating[:24]:<24} ║")
+        click.echo(f"  ║                                      ║")
+        click.echo(f"  ╚══════════════════════════════════════╝{Style.RESET_ALL}\n")
+
+        # Breakdown
+        if audit_report.score_breakdown:
+            click.echo(f"  {Fore.WHITE}Score Breakdown:{Style.RESET_ALL}")
+            for cat, data in audit_report.score_breakdown.items():
+                bar_filled = int((data['score'] / data['max']) * 20) if data['max'] > 0 else 0
+                bar_empty = 20 - bar_filled
+                bar_color = Fore.GREEN if data['score'] >= data['max'] * 0.8 else Fore.YELLOW if data['score'] >= data['max'] * 0.5 else Fore.RED
+                click.echo(
+                    f"    {cat:<14} {bar_color}{'█' * bar_filled}{'░' * bar_empty}{Style.RESET_ALL} "
+                    f"{data['score']:>2}/{data['max']} ({data['findings']} findings)"
+                )
+            click.echo()
+
+        # Findings
+        if audit_report.findings:
+            click.echo(f"  {Fore.WHITE}Findings ({len(audit_report.findings)}):{Style.RESET_ALL}")
+            for f in audit_report.findings:
+                sev_icon = {
+                    "critical": f"{Fore.RED}🔴",
+                    "high": f"{Fore.RED}🟠",
+                    "medium": f"{Fore.YELLOW}🟡",
+                    "low": f"{Fore.CYAN}🔵",
+                    "info": f"{Fore.WHITE}⚪",
+                }.get(f.severity.value, "?")
+                click.echo(f"    {sev_icon} [{f.severity.value:>8}]{Style.RESET_ALL} {f.message}")
+                if f.remediation:
+                    click.echo(f"               {Fore.WHITE}→ {f.remediation}{Style.RESET_ALL}")
+        else:
+            click.echo(f"  {Fore.GREEN}✅ No findings — governance posture is clean.{Style.RESET_ALL}")
+
+        # Semantic review
+        if audit_report.review:
+            review = audit_report.review
+            if review.get("risk_escalations", 0) > 0 or review.get("critical_findings"):
+                click.echo(f"\n  {Fore.WHITE}Semantic Review:{Style.RESET_ALL}")
+                for trace in review.get("finding_traces", [])[:5]:
+                    for line in trace.split("\n"):
+                        click.echo(f"    {Fore.WHITE}{line}{Style.RESET_ALL}")
+
+        click.echo(f"\n{Fore.CYAN}━━━ REMOTE SCAN COMPLETE ━━━{Style.RESET_ALL}")
+
+    # Cleanup
+    if not keep:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+        if not json_out:
+            click.echo(f"  {Fore.WHITE}Temp files cleaned up.{Style.RESET_ALL}")
+    else:
+        if not json_out:
+            click.echo(f"  {Fore.WHITE}Repo kept at: {clone_path}{Style.RESET_ALL}")
+
+    # Threshold gating
+    if threshold is not None and audit_report.score < threshold:
+        raise SystemExit(1)
+
+
 if __name__ == "__main__":
     cli()
