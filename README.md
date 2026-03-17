@@ -247,7 +247,7 @@ meda-claw/
 | [Git_Provenance](https://github.com/VMaroon95/Git_Provenance) | AI attribution & IP compliance for Git |
 | [API_Auditor](https://github.com/VMaroon95/API_Auditor) | API key permission scanning |
 | [Repo_X-Ray](https://github.com/VMaroon95/Repo_X-Ray) | AST security scanner |
-| [ExtensionGuard](https://github.com/VMaroon95/ExtensionGuard) | Browser endpoint security (Chrome Web Store) |
+| [ExtensionGuard](https://github.com/VMaroon95/ExtensionGuard) | Browser endpoint security ([Chrome Web Store](https://chromewebstore.google.com/detail/lbhlefplmdokabeeoefncmkgfldghchl)) |
 | [ProjectSpark](https://github.com/VMaroon95/ProjectSpark) | LLM evaluation & CLEAR Act compliance |
 | [Push_Guardian](https://github.com/VMaroon95/Push_Guardian) | Push notification sanitization |
 

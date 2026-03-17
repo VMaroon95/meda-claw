@@ -10,10 +10,10 @@
 - **Status:** ✅ Published on Chrome Web Store (public)
 - **Purpose:** Browser extension security suite — monitors extension permissions, sanitizes clipboard, shields URLs, detects ghost scripts, and filters AI privacy risks.
 - **Tech:** JavaScript, Chrome Extension APIs, Background Service Workers
-- **Links:** [GitHub](https://github.com/VMaroon95/ExtensionGuard) · [Chrome Web Store](https://chromewebstore.google.com)
+- **Links:** [GitHub](https://github.com/VMaroon95/ExtensionGuard) · [Chrome Web Store](https://chromewebstore.google.com/detail/lbhlefplmdokabeeoefncmkgfldghchl)
 
 ## 3. Size Oracle — Universal Size Advisor (v3.2.2)
 - **Status:** ✅ Published on Chrome Web Store (public)
 - **Purpose:** Universal size advisor for e-commerce — maps user measurements to brand-specific sizing across 100+ shopping sites.
 - **Tech:** JavaScript, Material Design, Chrome Extension API
-- **Links:** [GitHub](https://github.com/VMaroon95/Size-Oracle) · [Chrome Web Store](https://chromewebstore.google.com)
+- **Links:** [GitHub](https://github.com/VMaroon95/Size-Oracle) · [Chrome Web Store](https://chromewebstore.google.com/detail/eodjkomnclibgnnfcgdhgokhbolfbgkp)
