@@ -1,15 +1,31 @@
-# 🦞 meda-claw: Independent AI Security & Governance
+# 🦞 meda-claw: Independent Security for AI-Assisted Development
 
 [![Governance Audit](https://github.com/VMaroon95/meda-claw/actions/workflows/medaclaw-ci.yml/badge.svg)](https://github.com/VMaroon95/meda-claw/actions/workflows/medaclaw-ci.yml)
 [![License](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 [![AI Governance Score](https://img.shields.io/badge/AI%20Governance-A%20(94)-brightgreen?style=flat-square)](demo/vulnerable_repo/)
 
-> **"Who audits the AI that writes your code?"**
+> **"Checking the AI's work, so you don't have to."**
 
-In the Agentic Era, tools like Claude, Cursor, and Devin are generating code 100x faster than humans can review it. This "Velocity Gap" is where critical secrets leak, logic hallucinations hide, and security attribution disappears. Standard scanners look for bugs; **meda-claw** audits **intent**.
+As we move toward development powered by agents like Claude and Cursor, the speed of code generation often outpaces our ability to review it. `meda-claw` is a lightweight, independent security layer designed to catch common AI hallucinations, leaked secrets, and unsafe logic before they reach your repository.
 
-`meda-claw` is a sovereign security framework that acts as a forensic layer between your AI agent and your production environment. By utilizing Claude's advanced reasoning and a punitive "Meda-Risk" scoring engine, it identifies not just what is wrong, but *why* it's a risk. Whether you are a solo developer using Cursor or an enterprise managing autonomous agents, `meda-claw` provides the active defense—blocking unsafe commits and enforcing governance before a single line of "hallucinated" code hits your repository.
+It uses AST (Abstract Syntax Tree) analysis and reasoning to provide a "Meda-Risk" score, helping developers maintain high standards in an AI-first workflow.
+
+## 🚀 Quick Start: Audit Any Repo (No Cloning Required)
+
+Install `meda-claw` via pip and scan any public GitHub repository directly from your terminal:
+
+```bash
+# 1. Install
+pip install meda-claw
+
+# 2. Scan a remote repository
+medaclaw remote https://github.com/psf/requests
+medaclaw remote psf/requests  # shorthand works too
+
+# 3. Generate your project badge
+medaclaw report --badge .
+```
 
 📜 [Manifesto](MANIFESTO.md) · 🤝 [Contributing](CONTRIBUTING.md)
 
@@ -17,7 +33,7 @@ In the Agentic Era, tools like Claude, Cursor, and Devin are generating code 100
 
 ## 🛡️ Key Advantages
 
-- **Active Sovereignty:** Physically block unsafe commits with local Git hooks.
+- **Active Defense:** Block unsafe commits with local Git hooks.
 - **Forensic Attribution:** Trace and verify AI-generated logic with AST analysis.
 - **Independent Trust:** A neutral auditor for the agentic age.
 
