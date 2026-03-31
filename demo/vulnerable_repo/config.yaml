@@ -4,12 +4,13 @@ app:
   version: 1.0.0
 
 # Google Maps API key left in config (HIGH)
-google_maps_api_key: "AIzaSyA1234567890abcdefghijklmnopqrstuv"
+# NOTE: These are INTENTIONALLY FAKE demo values for meda-claw scanning demos
+google_maps_api_key: "DEMO-FAKE-KEY-not-real-replace-me"
 
 # GitHub personal access token (CRITICAL)
-github_token: "ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij"
+github_token: "DEMO-FAKE-TOKEN-not-real-replace-me"
 
 database:
   host: localhost
   port: 5432
-  password: "admin123"
+  password: "DEMO-FAKE-PASSWORD"
