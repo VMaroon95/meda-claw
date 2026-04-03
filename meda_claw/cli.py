@@ -86,6 +86,12 @@ COMPONENTS = {
         "desc": "Push notification sanitization middleware",
         "icon": "🔔",
     },
+    "localfirst": {
+        "name": "LocalFirstAI",
+        "repo": "VMaroon95/LocalFirstAI",
+        "desc": "Privacy-first local AI agent framework",
+        "icon": "🔒",
+    },
 }
 
 

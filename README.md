@@ -250,6 +250,7 @@ meda-claw/
 | [ExtensionGuard](https://github.com/VMaroon95/ExtensionGuard) | Browser endpoint security ([Chrome Web Store](https://chromewebstore.google.com/detail/lbhlefplmdokabeeoefncmkgfldghchl)) |
 | [ProjectSpark](https://github.com/VMaroon95/ProjectSpark) | LLM evaluation & CLEAR Act compliance |
 | [Push_Guardian](https://github.com/VMaroon95/Push_Guardian) | Push notification sanitization |
+| [LocalFirstAI](https://github.com/VMaroon95/LocalFirstAI) | Privacy-first local AI agent framework |
 
 ## License
 
